@@ -27,10 +27,12 @@ All `db:*` scripts go through [scripts/supabase.sh](scripts/supabase.sh). It sta
 
 | Variable | Where to find it |
 | --- | --- |
-| `VITE_SUPABASE_URL` | `npm run db:status` → API URL (local: `http://127.0.0.1:54321`), or Project Settings → API on a hosted project |
-| `VITE_SUPABASE_ANON_KEY` | `npm run db:status` → anon key, or Project Settings → API |
+| `VITE_SUPABASE_URL` | `npm run db:status` → API URL (local: `http://127.0.0.1:54321`), or Supabase → Project Settings → Data API |
+| `VITE_SUPABASE_PUBLISHABLE` | `npm run db:status` → `PUBLISHABLE_KEY`, or Supabase → Project Settings → API Keys → publishable key (`sb_publishable_…`) |
 
-Only the public anon key goes to the browser. Never put the service-role key in `.env`.
+The variable name avoids the word "KEY" because Vercel blocks browser-exposed variables named like secrets. The legacy `VITE_SUPABASE_ANON_KEY` is still read as a fallback.
+
+Only the public key goes to the browser. Never put the secret or service-role key in `.env`.
 
 ## Database
 
