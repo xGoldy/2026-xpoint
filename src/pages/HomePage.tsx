@@ -2,11 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { Fragment, useEffect, useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { PersonCard } from '../components/PersonCard'
 import { TeacherList } from '../components/TeacherList'
 import { Button, EmptyState, INTERACTIVE_CARD, LinkButton, QueryView, Section } from '../components/ui'
 import { fetchCommunityStats, fetchSkillsWithOffers, fetchTopTeachers } from '../lib/api'
 import { CATEGORY_ICONS, plural } from '../lib/domain'
-import { useCategories, useLocalities } from '../lib/queries'
+import { useCategories, useLocalities, usePeopleRecommendations } from '../lib/queries'
 
 function HeroSearch() {
   const navigate = useNavigate()
@@ -110,6 +111,44 @@ function HowItWorks() {
   )
 }
 
+/** Top people-recommender suggestions for a logged-in member. */
+function SuggestedPeople() {
+  const { profile } = useAuth()
+  const people = usePeopleRecommendations(profile)
+  return (
+    <Section
+      title="Suggested for you"
+      actions={
+        <Link to="/people" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary-ink no-underline hover:underline">
+          See all people →
+        </Link>
+      }
+    >
+      <QueryView query={people} label="Finding people for you">
+        {({ me, recommendations }) =>
+          me.teach.length === 0 && me.learn.length === 0 ? (
+            <EmptyState title="Get personal suggestions" action={<LinkButton to="/account">Add your skills</LinkButton>}>
+              Tell us what you teach and want to learn, and we will suggest people to swap with.
+            </EmptyState>
+          ) : recommendations.length === 0 ? (
+            <EmptyState title="No suggestions yet" action={<LinkButton to="/account">Add more skills</LinkButton>}>
+              Nobody teaches or wants your skills yet. More skills on your profile means more matches.
+            </EmptyState>
+          ) : (
+            <ul className="grid gap-4 md:grid-cols-3">
+              {recommendations.slice(0, 3).map((r) => (
+                <li key={r.person.id}>
+                  <PersonCard rec={r} compact />
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </QueryView>
+    </Section>
+  )
+}
+
 /** HOME-1 to HOME-4 */
 export function HomePage() {
   const { userId, profile } = useAuth()
@@ -154,6 +193,8 @@ export function HomePage() {
         )}
         <Counters />
       </section>
+
+      {userId && <SuggestedPeople />}
 
       <Section
         title="Browse by category"

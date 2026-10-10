@@ -235,7 +235,12 @@ function MobileMenu() {
             <LinkButton to="/skills" variant="secondary">
               Discover
             </LinkButton>
-            <LinkButton to="/offers/new">Teach a skill</LinkButton>
+            <LinkButton to="/people" variant="secondary">
+              People for you
+            </LinkButton>
+            <LinkButton to="/offers/new" className="col-span-2">
+              Teach a skill
+            </LinkButton>
           </nav>
           <nav aria-label="Account" className="mt-4 border-t border-line pt-3">
             {userId ? (
@@ -264,6 +269,9 @@ function Header() {
         <nav aria-label="Main" className="hidden items-center lg:flex">
           <NavLink to="/skills" className={navLink}>
             Discover
+          </NavLink>
+          <NavLink to="/people" className={navLink}>
+            People
           </NavLink>
           <Link to="/#how-it-works" className={navLink({ isActive: false })}>
             How it works
@@ -347,6 +355,9 @@ export function Layout() {
             </Link>
             <Link to="/offers/new" className="inline-flex min-h-11 items-center text-muted no-underline hover:text-ink">
               Teach a skill
+            </Link>
+            <Link to="/people" className="inline-flex min-h-11 items-center text-muted no-underline hover:text-ink">
+              People for you
             </Link>
             <Link to="/#how-it-works" className="inline-flex min-h-11 items-center text-muted no-underline hover:text-ink">
               How it works

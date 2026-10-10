@@ -65,7 +65,7 @@ Every other seeded member logs in as `<username>@skillswap.test`, for example `j
 npm test
 ```
 
-Unit tests cover the pure matching function ([src/lib/match.ts](src/lib/match.ts)) for every factor and the tie-breaking, the Bratislava time helpers, and the `.ics` builder. Weights live in `MATCH_WEIGHTS`.
+Unit tests cover the pure matching function ([src/lib/match.ts](src/lib/match.ts)) and the people recommender ([src/lib/recommend.ts](src/lib/recommend.ts)) for every factor and the tie-breaking, plus the Bratislava time helpers and the `.ics` builder. Weights live in `MATCH_WEIGHTS` and `RECOMMEND_WEIGHTS`.
 
 ## Where things are
 
@@ -74,4 +74,5 @@ Unit tests cover the pure matching function ([src/lib/match.ts](src/lib/match.ts
 | `src/pages/` | One component per route (Section 7) |
 | `src/lib/api.ts` | All Supabase queries |
 | `src/lib/match.ts` | Scoring and ranking (Section 6), with no database access |
+| `src/lib/recommend.ts` | People recommender on `/people`: suggests skill swaps, teachers and learners from everyone's teach and learn lists |
 | `src/components/BookingItem.tsx` | Booking actions: accept, decline, cancel, complete, `.ics`, points |

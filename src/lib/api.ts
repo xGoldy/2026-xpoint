@@ -3,6 +3,7 @@ import { slotFromRow, type WeeklySlot } from './availability'
 import type { BookingStatus, Format, Mode } from './domain'
 import { likeEscape } from './domain'
 import type { Level, MatchLearner, MatchOffer, OfferLevel } from './match'
+import type { Candidate, Member, PersonSkill } from './recommend'
 import { supabase } from './supabase'
 
 export interface Locality {
@@ -550,4 +551,81 @@ export async function fetchMatchData(skillId: string, profile: Profile, locality
   }))
 
   return { learner, candidates, openBookingOfferIds }
+}
+
+// People recommender ----------------------------------------------------------
+
+export type PeopleCandidate = Candidate & {
+  /** Active offers, so a card can link straight to the right one. */
+  offers: { id: string; skillId: string; title: string }[]
+}
+
+export interface PeopleData {
+  me: Member
+  candidates: PeopleCandidate[]
+}
+
+const toPersonSkill = (s: Pick<UserSkill, 'skill_id' | 'level' | 'skill'>): PersonSkill => ({
+  skillId: s.skill_id,
+  skillName: s.skill.name,
+  level: s.level,
+})
+
+/** Loads the current member and everyone who teaches or wants one of their skills. */
+export async function fetchPeopleData(profile: Profile, localityName: string): Promise<PeopleData> {
+  const [mySkills, mySlots] = await Promise.all([fetchUserSkills(profile.id), fetchAvailability(profile.id)])
+  const me: Member = {
+    id: profile.id,
+    localityId: profile.locality_id,
+    localityName,
+    teach: mySkills.filter((s) => s.role === 'teach').map(toPersonSkill),
+    learn: mySkills.filter((s) => s.role === 'learn').map(toPersonSkill),
+    availability: mySlots.map(slotFromRow),
+  }
+  const skillIds = [...new Set(mySkills.map((s) => s.skill_id))]
+  if (skillIds.length === 0) return { me, candidates: [] }
+
+  const links = unwrap<{ user_id: string }[]>(
+    await supabase.from('user_skills').select('user_id').in('skill_id', skillIds).neq('user_id', profile.id),
+  )
+  const ids = [...new Set(links.map((l) => l.user_id))]
+  if (ids.length === 0) return { me, candidates: [] }
+
+  const [people, skills, slots, offers] = await Promise.all([
+    supabase.from('teacher_directory').select('*').in('id', ids),
+    supabase.from('user_skills').select('user_id, skill_id, role, level, skill:skills(id, name)').in('user_id', ids),
+    supabase.from('availability_slots').select('user_id, weekday, start_time, end_time').in('user_id', ids),
+    supabase.from('offers').select('id, teacher_id, skill_id, title').eq('status', 'active').in('teacher_id', ids),
+  ])
+
+  const group = <T extends { user_id: string }>(rows: T[]) => {
+    const map = new Map<string, T[]>()
+    for (const r of rows) map.set(r.user_id, [...(map.get(r.user_id) ?? []), r])
+    return map
+  }
+  const skillsBy = group(unwrap<(Pick<UserSkill, 'user_id' | 'skill_id' | 'role' | 'level' | 'skill'>)[]>(skills))
+  const slotsBy = group(unwrap<{ user_id: string; weekday: number; start_time: string; end_time: string }[]>(slots))
+  const offersBy = new Map<string, PeopleCandidate['offers']>()
+  for (const o of unwrap<{ id: string; teacher_id: string; skill_id: string; title: string }[]>(offers)) {
+    offersBy.set(o.teacher_id, [...(offersBy.get(o.teacher_id) ?? []), { id: o.id, skillId: o.skill_id, title: o.title }])
+  }
+
+  const candidates = unwrap<TeacherCard[]>(people).map((p): PeopleCandidate => {
+    const their = skillsBy.get(p.id) ?? []
+    return {
+      id: p.id,
+      username: p.username,
+      firstName: p.first_name,
+      lastName: p.last_name,
+      localityId: p.locality_id,
+      localityName: p.locality_name,
+      pointsTotal: p.points_total,
+      ratingCount: p.rating_count,
+      teach: their.filter((s) => s.role === 'teach').map(toPersonSkill),
+      learn: their.filter((s) => s.role === 'learn').map(toPersonSkill),
+      availability: (slotsBy.get(p.id) ?? []).map(slotFromRow),
+      offers: offersBy.get(p.id) ?? [],
+    }
+  })
+  return { me, candidates }
 }

@@ -10,12 +10,13 @@ import { MySessionsPage } from './pages/MySessionsPage'
 import { NewOfferPage } from './pages/NewOfferPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { OfferPage } from './pages/OfferPage'
+import { PeoplePage } from './pages/PeoplePage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SkillPage } from './pages/SkillPage'
 import { SkillsPage } from './pages/SkillsPage'
 import { UserPage } from './pages/UserPage'
 
-// Section 7: twelve routes.
+// Section 7: twelve routes, plus /people for the people recommender.
 export default function App() {
   return (
     <Routes>
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="offers/new" element={<RequireAuth><NewOfferPage /></RequireAuth>} />
         <Route path="offers/:id" element={<OfferPage />} />
         <Route path="users/:username" element={<UserPage />} />
+        <Route path="people" element={<RequireAuth><PeoplePage /></RequireAuth>} />
         <Route path="account" element={<RequireAuth><AccountPage /></RequireAuth>} />
         <Route path="account/offers" element={<RequireAuth><MyOffersPage /></RequireAuth>} />
         <Route path="account/sessions" element={<RequireAuth><MySessionsPage /></RequireAuth>} />
