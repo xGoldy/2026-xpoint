@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Fragment, useEffect, useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { DemoLoginButton } from '../components/DemoLoginButton'
 import { PersonCard } from '../components/PersonCard'
 import { TeacherList } from '../components/TeacherList'
 import { Button, EmptyState, INTERACTIVE_CARD, LinkButton, QueryView, Section } from '../components/ui'
@@ -186,8 +187,9 @@ export function HomePage() {
             <LinkButton to="/register" className="px-7 py-3 text-base">
               Join now, it is free
             </LinkButton>
-            <LinkButton to="/skills" variant="secondary" className="px-7 py-3 text-base">
-              Browse skills
+            <DemoLoginButton />
+            <LinkButton to="/skills" variant="ghost" className="px-5 py-3 text-base">
+              Browse skills →
             </LinkButton>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { DEMO_ACCOUNT, DemoLoginButton } from '../components/DemoLoginButton'
 import { Button, Card, FormError, PageTitle, TextField, TextLink } from '../components/ui'
 import { errorMessage } from '../lib/errors'
 import { supabase } from '../lib/supabase'
@@ -58,6 +59,21 @@ export function LoginPage() {
             </TextLink>
           </p>
         </form>
+      </Card>
+      <div role="separator" className="my-6 flex items-center gap-3 text-sm text-muted">
+        <span className="h-px flex-1 bg-line" />
+        or
+        <span className="h-px flex-1 bg-line" />
+      </div>
+      <Card className="flex flex-col gap-3 text-center">
+        <h2 className="font-bold">Just looking around?</h2>
+        <p className="text-sm text-muted">
+          Explore SkillSwap as {DEMO_ACCOUNT.name}, a member with offers, requests to answer and past sessions.
+        </p>
+        <DemoLoginButton />
+        <p className="text-xs text-muted">
+          Demo login: {DEMO_ACCOUNT.email} / {DEMO_ACCOUNT.password}
+        </p>
       </Card>
     </div>
   )

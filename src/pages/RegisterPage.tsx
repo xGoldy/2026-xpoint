@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DemoLoginButton } from '../components/DemoLoginButton'
 import { SkillMultiSelect } from '../components/SkillPickers'
 import { Button, Card, FormError, PageTitle, QueryView, SelectField, TextField, TextLink } from '../components/ui'
 import { usernameAvailable } from '../lib/api'
@@ -98,6 +99,12 @@ export function RegisterPage() {
       <PageTitle subtitle="Join your neighbours. Teach what you know, learn what you love, free of charge.">
         Create your account
       </PageTitle>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary-soft-strong bg-primary-soft px-5 py-4">
+        <p className="text-sm text-primary-ink">
+          <strong>Want to look around first?</strong> Try SkillSwap with a ready-made demo account.
+        </p>
+        <DemoLoginButton />
+      </div>
       <Card>
         <form noValidate onSubmit={submit} className="flex flex-col gap-5">
           {errorList.length > 0 && (
