@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { fetchPendingCount } from '../lib/api'
 import { supabaseConfigured } from '../lib/supabase'
+import { SearchAutocomplete } from './SearchAutocomplete'
 import { ThemeToggle } from './ThemeControls'
 import { cx, LinkButton } from './ui'
 
@@ -23,37 +24,6 @@ function Logo() {
       <LogoMark />
       <span className="text-gradient text-xl font-extrabold tracking-tight">SkillSwap</span>
     </Link>
-  )
-}
-
-function HeaderSearch({ className, onSubmitted }: { className?: string; onSubmitted?: () => void }) {
-  const navigate = useNavigate()
-  const id = useId()
-  const [q, setQ] = useState('')
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    navigate(q.trim() ? `/skills?q=${encodeURIComponent(q.trim())}` : '/skills')
-    setQ('')
-    onSubmitted?.()
-  }
-  return (
-    <form role="search" onSubmit={submit} className={cx('relative flex', className)}>
-      <label htmlFor={id} className="sr-only">
-        Search skills
-      </label>
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-      </svg>
-      <input
-        id={id}
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search skills…"
-        className="min-h-11 w-full min-w-0 rounded-xl border border-line bg-surface-2 pr-3 pl-10 text-base text-ink placeholder:text-muted focus:border-primary focus:bg-surface"
-      />
-    </form>
   )
 }
 
@@ -230,7 +200,7 @@ function MobileMenu() {
       </button>
       {open && (
         <div id={panelId} className="animate-fade-up absolute inset-x-0 top-full z-30 border-b border-line bg-surface px-4 pt-4 pb-5 shadow-lift">
-          <HeaderSearch onSubmitted={() => setOpen(false)} />
+          <SearchAutocomplete onNavigate={() => setOpen(false)} />
           <nav aria-label="Main" className="mt-3 grid grid-cols-2 gap-2">
             <LinkButton to="/skills" variant="secondary">
               Discover
@@ -278,7 +248,7 @@ function Header() {
           </Link>
         </nav>
         <div className="hidden max-w-xs flex-1 md:block">
-          <HeaderSearch />
+          <SearchAutocomplete />
         </div>
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <div className="hidden md:block">

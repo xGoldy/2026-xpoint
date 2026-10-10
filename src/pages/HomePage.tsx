@@ -1,46 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { Fragment, useEffect, useId, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Fragment, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { DemoLoginButton } from '../components/DemoLoginButton'
 import { PersonCard } from '../components/PersonCard'
+import { SearchAutocomplete } from '../components/SearchAutocomplete'
 import { TeacherList } from '../components/TeacherList'
-import { Button, EmptyState, INTERACTIVE_CARD, LinkButton, QueryView, Section } from '../components/ui'
+import { EmptyState, INTERACTIVE_CARD, LinkButton, QueryView, Section } from '../components/ui'
 import { fetchCommunityStats, fetchSkillsWithOffers, fetchTopTeachers } from '../lib/api'
 import { CATEGORY_ICONS, plural } from '../lib/domain'
 import { useCategories, useLocalities, usePeopleRecommendations } from '../lib/queries'
-
-function HeroSearch() {
-  const navigate = useNavigate()
-  const id = useId()
-  const [q, setQ] = useState('')
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    navigate(q.trim() ? `/skills?q=${encodeURIComponent(q.trim())}` : '/skills')
-  }
-  return (
-    <form
-      role="search"
-      onSubmit={submit}
-      className="mx-auto mt-8 flex max-w-xl flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-lift sm:flex-row"
-    >
-      <label htmlFor={id} className="sr-only">
-        What do you want to learn?
-      </label>
-      <input
-        id={id}
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="What do you want to learn? Try “guitar”"
-        className="min-h-12 flex-1 rounded-xl bg-transparent px-4 text-base text-ink placeholder:text-muted"
-      />
-      <Button type="submit" className="min-h-12 px-6">
-        Find a teacher
-      </Button>
-    </form>
-  )
-}
 
 function Counters() {
   const stats = useQuery({ queryKey: ['community-stats'], queryFn: fetchCommunityStats })
@@ -181,7 +150,12 @@ export function HomePage() {
           Neighbours teaching neighbours, free of charge. Find someone nearby who can teach you, book a session, and
           thank them with points.
         </p>
-        <HeroSearch />
+        <SearchAutocomplete
+          variant="hero"
+          label="What do you want to learn?"
+          placeholder="What do you want to learn? Try “guitar”"
+          className="mx-auto mt-8 max-w-xl"
+        />
         {!userId && (
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <LinkButton to="/register" className="px-7 py-3 text-base">
