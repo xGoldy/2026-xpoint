@@ -32,3 +32,6 @@ supabase/.temp
 
 # Project-local Podman store for Supabase (images, containers, database)
 .supabase/
+.vercel
+.env*
+!.env.example
