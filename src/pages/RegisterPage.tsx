@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DemoLoginButton } from '../components/DemoLoginButton'
+import { RateLimitNotice } from '../components/RateLimitNotice'
 import { SkillMultiSelect } from '../components/SkillPickers'
 import { Button, Card, FormError, PageTitle, QueryView, SelectField, TextField, TextLink } from '../components/ui'
 import { usernameAvailable } from '../lib/api'
 import { errorMessage } from '../lib/errors'
+import { isServerRateLimit, SIGNUP_LIMIT } from '../lib/rateLimit'
 import { useAllSkills, useLocalities } from '../lib/queries'
 import { supabase } from '../lib/supabase'
+import { useAttemptLimiter } from '../lib/useAttemptLimiter'
 
 type Errors = Partial<Record<'first_name' | 'last_name' | 'username' | 'email' | 'password' | 'locality', string>>
 
@@ -24,6 +27,8 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<Errors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // Taken usernames and registered emails count as failures, so the form cannot be used to probe accounts.
+  const limiter = useAttemptLimiter('register', SIGNUP_LIMIT)
 
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm({ ...form, [key]: e.target.value })
 
@@ -48,9 +53,11 @@ export function RegisterPage() {
       document.getElementById('register-errors')?.focus()
       return
     }
+    if (limiter.isLocked()) return
     setBusy(true)
     try {
       if (!(await usernameAvailable(form.username))) {
+        limiter.recordFailure()
         setErrors({ username: 'This username is already taken. Try another one.' })
         return
       }
@@ -69,6 +76,8 @@ export function RegisterPage() {
         },
       })
       if (error) {
+        if (isServerRateLimit(error)) limiter.recordServerLimit()
+        else if (error.code !== 'weak_password') limiter.recordFailure()
         if (error.code === 'user_already_exists' || /already registered/i.test(error.message)) {
           setErrors({ email: 'An account with this email already exists. Log in instead.' })
         } else if (error.code === 'weak_password') {
@@ -84,8 +93,10 @@ export function RegisterPage() {
         setFormError('Your account was created, but email confirmation is switched on in Supabase. Turn it off (A11) and log in.')
         return
       }
+      limiter.reset()
       navigate('/', { replace: true })
     } catch (err) {
+      if (isServerRateLimit(err)) limiter.recordServerLimit()
       setFormError(errorMessage(err))
     } finally {
       setBusy(false)
@@ -180,9 +191,10 @@ export function RegisterPage() {
               </div>
             )}
           </QueryView>
-          <FormError error={formError} />
+          {limiter.lockedFor === 0 && <FormError error={formError} />}
+          <RateLimitNotice lockedFor={limiter.lockedFor} attemptsLeft={limiter.attemptsLeft} action="try registering" />
           <div className="flex flex-wrap items-center gap-4">
-            <Button type="submit" busy={busy}>
+            <Button type="submit" busy={busy} disabled={limiter.lockedFor > 0}>
               Create account
             </Button>
             <p className="text-sm text-muted">

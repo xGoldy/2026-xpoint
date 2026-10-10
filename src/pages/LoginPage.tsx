@@ -1,9 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { DEMO_ACCOUNT, DemoLoginButton } from '../components/DemoLoginButton'
+import { RateLimitNotice } from '../components/RateLimitNotice'
 import { Button, Card, FormError, PageTitle, TextField, TextLink } from '../components/ui'
 import { errorMessage } from '../lib/errors'
+import { isServerRateLimit, LOGIN_LIMIT } from '../lib/rateLimit'
 import { supabase } from '../lib/supabase'
+import { useAttemptLimiter } from '../lib/useAttemptLimiter'
 
 /** AUTH-4, AUTH-5 */
 export function LoginPage() {
@@ -15,6 +18,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const limiter = useAttemptLimiter('login', LOGIN_LIMIT)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -24,13 +28,17 @@ export function LoginPage() {
     if (!password) found.password = 'Enter your password.'
     setErrors(found)
     if (Object.keys(found).length) return
+    if (limiter.isLocked()) return
     setBusy(true)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setBusy(false)
     if (error) {
+      if (isServerRateLimit(error)) limiter.recordServerLimit()
+      else if (error.code === 'invalid_credentials') limiter.recordFailure()
       setFormError(error.code === 'invalid_credentials' ? 'The email or password is not correct.' : errorMessage(error))
       return
     }
+    limiter.reset()
     navigate(from, { replace: true })
   }
 
@@ -48,8 +56,9 @@ export function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
           />
-          <FormError error={formError} />
-          <Button type="submit" busy={busy}>
+          {limiter.lockedFor === 0 && <FormError error={formError} />}
+          <RateLimitNotice lockedFor={limiter.lockedFor} attemptsLeft={limiter.attemptsLeft} action="log in" />
+          <Button type="submit" busy={busy} disabled={limiter.lockedFor > 0}>
             Log in
           </Button>
           <p className="text-sm text-muted">

@@ -205,6 +205,9 @@ anonymous_users = 30
 # Number of sessions that can be refreshed in a 5 minute interval per IP address.
 token_refresh = 150
 # Number of sign up and sign-in requests that can be made in a 5 minute interval per IP address (excludes anonymous users).
+# SkillSwap: this is the authoritative login and registration limit on hosted Supabase
+# (Authentication > Rate Limits); keep it at the same value there. The local CLI stack does not
+# enforce it. The app adds a per-browser lockout on top (src/lib/rateLimit.ts).
 sign_in_sign_ups = 30
 # Number of OTP / Magic link verifications that can be made in a 5 minute interval per IP address.
 token_verifications = 30

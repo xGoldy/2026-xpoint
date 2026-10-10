@@ -24,6 +24,8 @@ export function errorMessage(error: unknown): string {
   for (const [name, message] of Object.entries(CONSTRAINT_MESSAGES)) {
     if (text.includes(name)) return message
   }
+  if (e.code === 'over_request_rate_limit' || (error as { status?: number }).status === 429)
+    return 'Too many attempts from your network. Please wait a few minutes and try again.'
   if (e.code === '42501' || /row-level security/i.test(text)) return 'You are not allowed to do that.'
   if (e.code === 'PGRST116') return 'Not found.'
   if (/Failed to fetch|NetworkError/i.test(text)) return 'Cannot reach the server. Check your connection and try again.'

@@ -48,6 +48,17 @@ Only the public key goes to the browser. Never put the secret or service-role ke
 
 **Hosted Supabase project:** in Authentication → Providers → Email, turn off "Confirm email" (A11). Then paste `supabase/hosted.sql` into the SQL editor and run it. The seed creates auth users directly, so it must run as the `postgres` role, which the SQL editor does.
 
+## Rate limiting (login and registration)
+
+Login and registration go straight from the browser to Supabase Auth, so limits work in two layers:
+
+| Layer | Limit | Where |
+| --- | --- | --- |
+| Supabase Auth, per IP address (authoritative) | 30 sign-ins and sign-ups per 5 minutes | Hosted: Authentication → Rate Limits. Local: `sign_in_sign_ups` in `supabase/config.toml`, which the local CLI stack does not enforce |
+| App, per browser | 5 failed attempts per 15 minutes locks the form with a countdown; a server "too many requests" answer pauses it for 5 minutes | [src/lib/rateLimit.ts](src/lib/rateLimit.ts) |
+
+The app layer is a usability and speed bump, since it lives in the browser and can be bypassed by calling the API directly. Failed logins count, and so do registration attempts that hit a taken username or an already registered email, so the form cannot be used to probe accounts. For stronger protection against bots, turn on CAPTCHA in Supabase (Authentication → Attack Protection) and add the widget to both forms.
+
 ## Demo accounts
 
 All seeded accounts use the password `skillswap123`.
